@@ -14,7 +14,8 @@ const search = (documents, query) => {
     return []
   }
 
-  return []
+  const filtered_documents = documents.filter(document => document.text.includes(query))
+  return filtered_documents.map(document => document.name)
 }
 
 export default search
