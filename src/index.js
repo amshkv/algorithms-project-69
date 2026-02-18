@@ -22,13 +22,15 @@ const search = (documents, query) => {
     return []
   }
 
-  return documents.reduce((result, document) => {
-    const docTerms = new Set(tokenize(document.text))
-    if (queryTerms.every(term => docTerms.has(term))) {
-      result.push(document.name)
-    }
-    return result
-  }, [])
+  return documents.map(({ text, name }) => {
+    const docTokens = tokenize(text)
+    const score = queryTerms.reduce((acc, term) => (
+      acc + docTokens.filter(t => t === term).length
+    ), 0)
+    return { name, score }
+  })
+    .filter(document => document.score > 0)
+    .sort((document_a, document_b) => document_b.score - document_a.score)
+    .map(document => document.name)
 }
-
 export default search
