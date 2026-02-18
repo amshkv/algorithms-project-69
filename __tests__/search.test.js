@@ -58,3 +58,32 @@ test('ranks documents by frequency after query normalization', () => {
 
   expect(search(documents, 'pint!')).toEqual(['doc-2', 'doc-1'])
 })
+
+test('supports fuzzy search with multiple query terms', () => {
+  const documents = [
+    { name: 'doc-1', text: 'I cannot shoot straight unless I had a pint' },
+    { name: 'doc-2', text: 'Do not shoot shoot shoot that thing at me' },
+    { name: 'doc-3', text: 'I am your shooter' },
+  ]
+
+  expect(search(documents, 'shoot at me')).toEqual(['doc-2', 'doc-1'])
+})
+
+test('ranks by matched query terms count before total occurrences', () => {
+  const documents = [
+    { name: 'doc-1', text: 'shoot shoot shoot shoot' },
+    { name: 'doc-2', text: 'shoot at' },
+    { name: 'doc-3', text: 'me me' },
+  ]
+
+  expect(search(documents, 'shoot at me')).toEqual(['doc-2', 'doc-1', 'doc-3'])
+})
+
+test('uses total occurrences as tie breaker for the same matched terms count', () => {
+  const documents = [
+    { name: 'doc-2', text: 'shoot at me' },
+    { name: 'doc-1', text: 'shoot at me me' },
+  ]
+
+  expect(search(documents, 'shoot at me')).toEqual(['doc-1', 'doc-2'])
+})

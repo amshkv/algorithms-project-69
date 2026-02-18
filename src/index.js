@@ -24,13 +24,17 @@ const search = (documents, query) => {
 
   return documents.map(({ text, name }) => {
     const docTokens = tokenize(text)
-    const score = queryTerms.reduce((acc, term) => (
-      acc + docTokens.filter(t => t === term).length
-    ), 0)
-    return { name, score }
+    const scores = queryTerms.reduce((acc, term) => {
+      const count = docTokens.filter(t => t === term).length
+      if (count > 0) {
+        return [acc[0] + 1, acc[1] + count]
+      }
+      return [acc[0], acc[1]]
+    }, [0, 0])
+    return { name, scores }
   })
-    .filter(document => document.score > 0)
-    .sort((document_a, document_b) => document_b.score - document_a.score)
+    .filter(document => document.scores[0] > 0)
+    .sort((a, b) => (b.scores[0] - a.scores[0]) || (b.scores[1] - a.scores[1]))
     .map(document => document.name)
 }
 export default search
