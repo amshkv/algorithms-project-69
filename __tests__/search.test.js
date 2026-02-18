@@ -21,3 +21,30 @@ test('returns an empty array when no documents match the query', () => {
 
   expect(search(documents, 'python')).toEqual([])
 })
+
+test('finds documents when punctuation differs between text and query', () => {
+  const documents = [
+    { name: 'doc-1', text: 'I can\'t shoot straight unless I\'ve had a pint!' },
+    { name: 'doc-2', text: 'The pub is closed today' },
+  ]
+
+  expect(search(documents, 'pint?')).toEqual(['doc-1'])
+})
+
+test('finds documents when query contains punctuation and text does not', () => {
+  const documents = [
+    { name: 'doc-1', text: 'I had a pint in the evening' },
+    { name: 'doc-2', text: 'Tea and coffee only' },
+  ]
+
+  expect(search(documents, 'pint!')).toEqual(['doc-1'])
+})
+
+test('returns an empty array when query has no terms', () => {
+  const documents = [
+    { name: 'doc-1', text: 'I had a pint in the evening' },
+    { name: 'doc-2', text: 'Tea and coffee only' },
+  ]
+
+  expect(search(documents, '!!!')).toEqual([])
+})

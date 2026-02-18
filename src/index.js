@@ -9,13 +9,26 @@
  * @param {string} query
  * @returns {string[]}
  */
+
+import tokenize from './helpers/tokenize.js'
+
 const search = (documents, query) => {
   if (!Array.isArray(documents) || query.length === 0) {
     return []
   }
 
-  const filteredDocuments = documents.filter(document => document.text.includes(query))
-  return filteredDocuments.map(document => document.name)
+  const queryTerms = tokenize(query)
+  if (queryTerms.length === 0) {
+    return []
+  }
+
+  return documents.reduce((result, document) => {
+    const docTerms = new Set(tokenize(document.text))
+    if (queryTerms.every(term => docTerms.has(term))) {
+      result.push(document.name)
+    }
+    return result
+  }, [])
 }
 
 export default search
