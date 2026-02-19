@@ -1,1 +1,1 @@
-export default text => text.toLowerCase().match(/\w+/g) ?? []
+export default (text) => text.toLowerCase().match(/\w+/g) ?? [];

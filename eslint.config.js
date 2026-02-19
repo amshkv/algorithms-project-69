@@ -1,18 +1,16 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import { defineConfig } from 'eslint/config'
-import stylistic from '@stylistic/eslint-plugin'
+import js from '@eslint/js';
+import globals from 'globals';
+import stylistic from '@stylistic/eslint-plugin';
 
-export default defineConfig([
+export default [
   stylistic.configs.recommended,
+  js.configs.recommended,
   {
     files: ['**/*.{js,mjs,cjs}'],
-    plugins: { js },
-    extends: ['js/recommended'],
     languageOptions: { globals: globals.node },
     rules: {
       '@stylistic/arrow-parens': 'off',
       '@stylistic/semi': 'off',
     },
   },
-])
+];

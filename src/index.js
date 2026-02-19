@@ -22,12 +22,10 @@ const search = (documents, query) => {
     return [];
   }
 
-  const tokenizedDocuments = documents.map((document) => {
-    return {
-      id: document.id,
-      tokens: tokenize(document.text),
-    };
-  });
+  const tokenizedDocuments = documents.map((document) => ({
+    id: document.id,
+    tokens: tokenize(document.text),
+  }));
 
   const documentsCount = tokenizedDocuments.length;
   const documentFrequencies = tokenizedDocuments.reduce((acc, document) => {
@@ -42,9 +40,7 @@ const search = (documents, query) => {
     const termsCountInDocument = document.tokens.length;
 
     const score = uniqueQueryTerms.reduce((acc, term) => {
-      const termCountInDocument = document.tokens.filter((token) => {
-        return token === term;
-      }).length;
+      const termCountInDocument = document.tokens.filter((token) => token === term).length;
       if (termCountInDocument === 0) {
         return acc;
       }
@@ -58,12 +54,8 @@ const search = (documents, query) => {
 
     return { id: document.id, score, position };
   })
-    .filter((document) => {
-      return document.score > 0;
-    })
+    .filter((document) => document.score > 0)
     .sort((a, b) => (b.score - a.score) || (a.position - b.position))
-    .map((document) => {
-      return document.id;
-    });
+    .map((document) => document.id);
 };
 export default search;
