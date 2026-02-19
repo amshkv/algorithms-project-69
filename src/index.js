@@ -10,52 +10,60 @@
  * @returns {string[]}
  */
 
-import tokenize from './helpers/tokenize.js'
+import tokenize from './helpers/tokenize.js';
 
 const search = (documents, query) => {
   if (!Array.isArray(documents) || query.length === 0) {
-    return []
+    return [];
   }
 
-  const uniqueQueryTerms = [...new Set(tokenize(query))]
+  const uniqueQueryTerms = [...new Set(tokenize(query))];
   if (uniqueQueryTerms.length === 0) {
-    return []
+    return [];
   }
 
-  const tokenizedDocuments = documents.map(document => ({
-    id: document.id,
-    tokens: tokenize(document.text),
-  }))
+  const tokenizedDocuments = documents.map((document) => {
+    return {
+      id: document.id,
+      tokens: tokenize(document.text),
+    };
+  });
 
-  const documentsCount = tokenizedDocuments.length
+  const documentsCount = tokenizedDocuments.length;
   const documentFrequencies = tokenizedDocuments.reduce((acc, document) => {
-    const uniqueDocumentTerms = new Set(document.tokens)
+    const uniqueDocumentTerms = new Set(document.tokens);
     uniqueDocumentTerms.forEach((term) => {
-      acc[term] = (acc[term] ?? 0) + 1
-    })
-    return acc
-  }, {})
+      acc[term] = (acc[term] ?? 0) + 1;
+    });
+    return acc;
+  }, {});
 
   return tokenizedDocuments.map((document, position) => {
-    const termsCountInDocument = document.tokens.length
+    const termsCountInDocument = document.tokens.length;
 
     const score = uniqueQueryTerms.reduce((acc, term) => {
-      const termCountInDocument = document.tokens.filter(token => token === term).length
+      const termCountInDocument = document.tokens.filter((token) => {
+        return token === term;
+      }).length;
       if (termCountInDocument === 0) {
-        return acc
+        return acc;
       }
 
-      const tf = termCountInDocument / termsCountInDocument
-      const df = documentFrequencies[term] ?? 0
-      const idf = Math.log((documentsCount + 1) / (df + 1)) + 1
+      const tf = termCountInDocument / termsCountInDocument;
+      const df = documentFrequencies[term] ?? 0;
+      const idf = Math.log((documentsCount + 1) / (df + 1)) + 1;
 
-      return acc + (tf * idf)
-    }, 0)
+      return acc + (tf * idf);
+    }, 0);
 
-    return { id: document.id, score, position }
+    return { id: document.id, score, position };
   })
-    .filter(document => document.score > 0)
+    .filter((document) => {
+      return document.score > 0;
+    })
     .sort((a, b) => (b.score - a.score) || (a.position - b.position))
-    .map(document => document.id)
-}
-export default search
+    .map((document) => {
+      return document.id;
+    });
+};
+export default search;

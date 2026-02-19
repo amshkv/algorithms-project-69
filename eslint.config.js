@@ -10,5 +10,9 @@ export default defineConfig([
     plugins: { js },
     extends: ['js/recommended'],
     languageOptions: { globals: globals.node },
+    rules: {
+      '@stylistic/arrow-parens': 'off',
+      '@stylistic/semi': 'off',
+    },
   },
 ])
