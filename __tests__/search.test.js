@@ -3,73 +3,68 @@
 import { expect, test } from '@jest/globals'
 import search from '../index.js'
 
-test('builds an inverted index for query terms', () => {
+test('ranks documents by tf-idf for a single term', () => {
   const documents = [
-    { id: 'doc-1', text: 'hello world' },
-    { id: 'doc-2', text: 'welcome to hexlet' },
-    { id: 'doc-3', text: 'hexlet world' },
+    { id: 'doc1', text: 'apple apple apple banana' },
+    { id: 'doc2', text: 'apple banana' },
+    { id: 'doc3', text: 'banana banana' },
   ]
 
-  expect(search(documents, 'world hexlet')).toEqual({
-    world: ['doc-1', 'doc-3'],
-    hexlet: ['doc-2', 'doc-3'],
-  })
+  expect(search(documents, 'apple')).toEqual(['doc1', 'doc2'])
 })
 
-test('normalizes punctuation in query and document text', () => {
+test('normalizes punctuation in query and document', () => {
   const documents = [
     { id: 'doc-1', text: 'I had a pint!' },
     { id: 'doc-2', text: 'No beer today' },
   ]
 
-  expect(search(documents, 'pint?')).toEqual({
-    pint: ['doc-1'],
-  })
+  expect(search(documents, 'pint?')).toEqual(['doc-1'])
 })
 
-test('keeps query terms with empty matches', () => {
+test('returns an empty array when no documents match the query', () => {
   const documents = [
     { id: 'doc-1', text: 'some text' },
     { id: 'doc-2', text: 'some text too' },
   ]
 
-  expect(search(documents, 'some missing')).toEqual({
-    some: ['doc-1', 'doc-2'],
-    missing: [],
-  })
+  expect(search(documents, 'missing')).toEqual([])
 })
 
-test('does not duplicate document ids when a term repeats in one document', () => {
-  const documents = [
-    { id: 'doc1', text: 'some some some text' },
-    { id: 'doc2', text: 'some text too' },
-  ]
-
-  expect(search(documents, 'some text too')).toEqual({
-    some: ['doc1', 'doc2'],
-    text: ['doc1', 'doc2'],
-    too: ['doc2'],
-  })
-})
-
-test('orders document ids for each term by term frequency', () => {
-  const documents = [
-    { id: 'doc1', text: 'some some some text' },
-    { id: 'doc2', text: 'some text text too' },
-  ]
-
-  expect(search(documents, 'some text too')).toEqual({
-    some: ['doc1', 'doc2'],
-    text: ['doc2', 'doc1'],
-    too: ['doc2'],
-  })
-})
-
-test('returns an empty object when query has no terms', () => {
+test('returns an empty array when query has no terms', () => {
   const documents = [
     { id: 'doc-1', text: 'shoot at target' },
     { id: 'doc-2', text: 'shoot target' },
   ]
 
-  expect(search(documents, '!!!')).toEqual({})
+  expect(search(documents, '!!!')).toEqual([])
+})
+
+test('supports ranking for multi-word query', () => {
+  const documents = [
+    { id: 'doc-1', text: 'I cannot shoot straight unless I had a pint' },
+    { id: 'doc-2', text: 'Do not shoot shoot shoot that thing at me' },
+    { id: 'doc-3', text: 'I am your shooter' },
+  ]
+
+  expect(search(documents, 'shoot at me')).toEqual(['doc-2', 'doc-1'])
+})
+
+test('accounts for idf and boosts documents with rarer matched terms', () => {
+  const documents = [
+    { id: 'doc1', text: 'apple apple apple apple' },
+    { id: 'doc2', text: 'apple rare' },
+    { id: 'doc3', text: 'apple grape' },
+  ]
+
+  expect(search(documents, 'apple rare')).toEqual(['doc2', 'doc1', 'doc3'])
+})
+
+test('keeps source order for equal tf-idf scores', () => {
+  const documents = [
+    { id: 'doc1', text: 'apple banana' },
+    { id: 'doc2', text: 'apple banana' },
+  ]
+
+  expect(search(documents, 'apple')).toEqual(['doc1', 'doc2'])
 })
