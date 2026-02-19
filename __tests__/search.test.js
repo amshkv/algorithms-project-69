@@ -3,87 +3,73 @@
 import { expect, test } from '@jest/globals'
 import search from '../index.js'
 
-test('returns names of documents that contain the query', () => {
+test('builds an inverted index for query terms', () => {
   const documents = [
-    { name: 'doc-1', text: 'hello world' },
-    { name: 'doc-2', text: 'welcome to hexlet' },
-    { name: 'doc-3', text: 'hexlet world' },
+    { id: 'doc-1', text: 'hello world' },
+    { id: 'doc-2', text: 'welcome to hexlet' },
+    { id: 'doc-3', text: 'hexlet world' },
   ]
 
-  expect(search(documents, 'world')).toEqual(['doc-1', 'doc-3'])
+  expect(search(documents, 'world hexlet')).toEqual({
+    world: ['doc-1', 'doc-3'],
+    hexlet: ['doc-2', 'doc-3'],
+  })
 })
 
-test('returns an empty array when no documents match the query', () => {
+test('normalizes punctuation in query and document text', () => {
   const documents = [
-    { name: 'doc-1', text: 'hello world' },
-    { name: 'doc-2', text: 'welcome to hexlet' },
+    { id: 'doc-1', text: 'I had a pint!' },
+    { id: 'doc-2', text: 'No beer today' },
   ]
 
-  expect(search(documents, 'python')).toEqual([])
+  expect(search(documents, 'pint?')).toEqual({
+    pint: ['doc-1'],
+  })
 })
 
-test('finds documents when text contains punctuation', () => {
+test('keeps query terms with empty matches', () => {
   const documents = [
-    { name: 'doc-1', text: 'I can\'t shoot straight unless I\'ve had a pint!' },
-    { name: 'doc-2', text: 'The pub is closed today' },
+    { id: 'doc-1', text: 'some text' },
+    { id: 'doc-2', text: 'some text too' },
   ]
 
-  expect(search(documents, 'pint')).toEqual(['doc-1'])
+  expect(search(documents, 'some missing')).toEqual({
+    some: ['doc-1', 'doc-2'],
+    missing: [],
+  })
 })
 
-test('returns an empty array when query has no terms', () => {
+test('does not duplicate document ids when a term repeats in one document', () => {
   const documents = [
-    { name: 'doc-1', text: 'I had a pint in the evening' },
-    { name: 'doc-2', text: 'Tea and coffee only' },
+    { id: 'doc1', text: 'some some some text' },
+    { id: 'doc2', text: 'some text too' },
   ]
 
-  expect(search(documents, '!!!')).toEqual([])
+  expect(search(documents, 'some text too')).toEqual({
+    some: ['doc1', 'doc2'],
+    text: ['doc1', 'doc2'],
+    too: ['doc2'],
+  })
 })
 
-test('ranks matched documents by term frequency', () => {
+test('orders document ids for each term by term frequency', () => {
   const documents = [
-    { name: 'doc-1', text: 'I cannot shoot straight unless I had a pint' },
-    { name: 'doc-2', text: 'Do not shoot shoot shoot that thing at me' },
-    { name: 'doc-3', text: 'I am your shooter' },
+    { id: 'doc1', text: 'some some some text' },
+    { id: 'doc2', text: 'some text text too' },
   ]
 
-  expect(search(documents, 'shoot')).toEqual(['doc-2', 'doc-1'])
+  expect(search(documents, 'some text too')).toEqual({
+    some: ['doc1', 'doc2'],
+    text: ['doc2', 'doc1'],
+    too: ['doc2'],
+  })
 })
 
-test('ranks documents by frequency after query normalization', () => {
+test('returns an empty object when query has no terms', () => {
   const documents = [
-    { name: 'doc-1', text: 'pint in the evening' },
-    { name: 'doc-2', text: 'pint pint and tea' },
+    { id: 'doc-1', text: 'shoot at target' },
+    { id: 'doc-2', text: 'shoot target' },
   ]
 
-  expect(search(documents, 'pint!')).toEqual(['doc-2', 'doc-1'])
-})
-
-test('supports fuzzy search with multiple query terms', () => {
-  const documents = [
-    { name: 'doc-1', text: 'I cannot shoot straight unless I had a pint' },
-    { name: 'doc-2', text: 'Do not shoot shoot shoot that thing at me' },
-    { name: 'doc-3', text: 'I am your shooter' },
-  ]
-
-  expect(search(documents, 'shoot at me')).toEqual(['doc-2', 'doc-1'])
-})
-
-test('ranks by matched query terms count before total occurrences', () => {
-  const documents = [
-    { name: 'doc-1', text: 'shoot shoot shoot shoot' },
-    { name: 'doc-2', text: 'shoot at' },
-    { name: 'doc-3', text: 'me me' },
-  ]
-
-  expect(search(documents, 'shoot at me')).toEqual(['doc-2', 'doc-1', 'doc-3'])
-})
-
-test('uses total occurrences as tie breaker for the same matched terms count', () => {
-  const documents = [
-    { name: 'doc-2', text: 'shoot at me' },
-    { name: 'doc-1', text: 'shoot at me me' },
-  ]
-
-  expect(search(documents, 'shoot at me')).toEqual(['doc-1', 'doc-2'])
+  expect(search(documents, '!!!')).toEqual({})
 })
